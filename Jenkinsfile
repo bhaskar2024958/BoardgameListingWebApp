@@ -6,9 +6,9 @@ pipeline {
     }
 
     stages {
-        stage('git checkout') {
+         stage('test') {
             steps {
-                git branch: 'main', credentialsId: 'git-cred', url: 'https://github.com/bhaskar2024958/BoardgameListingWebApp.git'
+               sh 'mvn test'
             }
         }
         stage('Build') {
