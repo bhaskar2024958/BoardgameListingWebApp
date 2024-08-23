@@ -1,51 +1,102 @@
 pipeline {
     agent any
-    tools {
+    
+    tools{
         jdk 'jdk17'
-        maven 'maven3'
+        maven 'maven2'
     }
-    environment {
-        SCANNER_HOME = tool 'sonar-scanner'
+    environment{
+        SCANNER_HOME= tool 'sonar-scanner'
     }
+    
 
     stages {
-        stage('git-checkout') {
+        
+        stage('Git Checkout ') {
             steps {
-                git branch: 'main', changelog: false, poll: false, url: 'https://github.com/your-repo.git'
-            }
-        }
-
-        stage('Code-Compile') {
-            steps {
-                sh "mvn clean compile"
-            }
-        }
-
-
-        stage('Package') {
-            steps {
-                sh "mvn clean package"
-            }
-        }
-       
-
-        stage('Sonar Analysis') {
-            steps {
-                withSonarQubeEnv('sonar') {
-					sh ''' 
-                    $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Devops-CICD \
-                    -Dsonar.java.binaries=. \
-                    -Dsonar.projectKey=Devops-CICD 
-                    '''
-                }
-            }
-        }
-
-        stage('Quality Gate Check') {
-            steps {
-               waitForQualityGate abortPipeline: false
+               git branch: 'main', url: 'https://github.com/bhaskar2024958/BoardgameListingWebApp'
             }
         }
         
+        stage('Compile') {
+            steps {
+               sh 'mvn compile'
+            }
+        }
+        
+        stage('Test') {
+            steps {
+               sh 'mvn test'
+            }
+        }
+        
+        stage('File System Scan') {
+            steps {
+                sh 'trivy fs --format table -o trivy-fs-report.html .'
+            }
+        }
+        
+        stage('Sonar Analysis') {
+            steps {
+               withSonarQubeEnv('sonar'){
+                   sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=OnlineGame \
+                   -Dsonar.java.binaries=. \
+                   -Dsonar.projectKey=OnlineGame '''
+               }
+            }
+        }
+        
+     
+        
+        stage('Build') {
+            steps {
+                sh 'mvn package'
+            }
+        }
+        stage('Publish to Nexus') {
+            steps {
+                withMaven(globalMavenSettingsConfig: 'global-settings', jdk: 'jdk17', maven: 'maven2', mavenSettingsConfig: '', traceability: true) {
+                     sh 'mvn deploy'
+                }
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+               script{
+                   withDockerRegistry(credentialsId: 'docker-cred',toolName: 'docker') {
+                    sh "docker build -t javaexpress/boardgame:latest ."
+                 }
+               }
+            }
+        }
+        stage('Docker Image Scan') {
+            steps {
+                sh 'trivy image --format table -o trivy-fs-report1.html javaexpress/boardgame:latest'
+            }
+        }
+        
+        stage('Docker Push') {
+            steps {
+               script{
+                   withDockerRegistry(credentialsId: 'docker-cred',toolName: 'docker') {
+                    sh "docker push javaexpress/boardgame:latest"
+                 }
+               }
+            }
+        }
+        
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh 'kubectl apply -f deployment-service.yaml'
+            }
+        }
+        
+        stage('Verify Deployment') {
+            steps {
+               sh 'kubectl get pods'
+               sh 'kubectl get svc'
+            }
+        }
     }
 }
+
