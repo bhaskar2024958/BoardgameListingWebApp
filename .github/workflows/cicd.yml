@@ -58,6 +58,10 @@ jobs:
       run: |
           docker push javaexpress/boardgame:latest
 
+    - name: Deploy to Kubernetes
+      run: |
+          kubectl apply -f deployment-service.yaml        
+
     - name: Clean the workspace
       uses: docker://alpine
       with:
