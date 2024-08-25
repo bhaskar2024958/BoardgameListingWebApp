@@ -56,4 +56,4 @@ jobs:
 
     - name: Push Docker Image
       run: |
-          docker push javaexpress/boardgame:latest .
+          docker push javaexpress/boardgame:latest
