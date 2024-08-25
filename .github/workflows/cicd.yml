@@ -57,3 +57,8 @@ jobs:
     - name: Push Docker Image
       run: |
           docker push javaexpress/boardgame:latest
+
+    - name: Clean the workspace
+      uses: docker://alpine
+      with:
+        args: /bin/sh -c "find \"${GITHUB_WORKSPACE}\" -mindepth 1 ! -name . -prune -exec rm -rf {} +"          
