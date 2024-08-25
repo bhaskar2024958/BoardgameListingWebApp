@@ -29,5 +29,13 @@ jobs:
     - name: Trivy FS Scan
       run: |
         trivy fs --format table -o trivy-fs-report.html .
-      
-      
+
+    - name: Analyze with SonarQube
+      uses: SonarSource/sonarqube-scan-action@7295e71c9583053f5bf40e9d4068a0c974603ec8
+      env:
+        SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}   
+        SONAR_HOST_URL: ${{ secrets.SONARQUBE_HOST }} 
+      with:
+        args:
+          -Dsonar.projectKey=BoardGame
+          -Dsonar.java.binaries=.
