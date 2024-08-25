@@ -23,9 +23,11 @@ jobs:
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v4.3.6
       with:
-        name: myartifact
+        name: BoardGame
         path: target/*.jar
 
-    
+    - name: Trivy FS Scan
+      run: |
+        trivy fs --format table -o trivy-fs-report.html .
       
       
